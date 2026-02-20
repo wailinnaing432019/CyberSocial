@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CyberSocial - Login</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+    <div class="auth-card">
+        <h2>CyberSocial Login</h2>
+        <p class="subtitle">Connect with friends and stay secure.</p>
+
+        <div class="input-group">
+            <label>Email</label>
+            <input type="email" id="email" placeholder="example@mail.com">
+        </div>
+        <div class="input-group">
+            <label>Password</label>
+            <input type="password" id="password" placeholder="••••••••">
+        </div>
+
+        <button class="btn-primary" onclick="handleLogin()">Login</button>
+        <p class="footer-text">New here? <a href="register.html">Register</a></p>
+        <p id="message"></p>
+    </div>
+    <script src="js/auth.js"></script>
+</body>
+
+</html>
