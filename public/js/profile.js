@@ -5,29 +5,74 @@ async function loadProfile() {
         headers: { 'Authorization': `Bearer ${token}` }
     });
     user = await res.json();
-
+    console.log("Loaded user profile:", user);
     document.getElementById('bioInput').value = user.bio || '';
+    document.getElementById('nameInput').value = user.fullName || '';
+    document.getElementById('emailInput').value = user.email || '';
+    document.getElementById('dobInput').value = user.birthday || '';
     document.getElementById('current-avatar').src = user.avatar || '/uploads/default.png';
 }
 
+
+// profile.js ထဲမှာ ဒီ code ကို ထည့်ပေးပါ
+document.getElementById('avatarInput').addEventListener('change', function (event) {
+    const file = event.target.files[0];
+    const preview = document.getElementById('current-avatar');
+
+    if (file) {
+        // ၁။ Client-side Validation (Security Check)
+        if (!file.type.startsWith('image/')) {
+            alert("ဓာတ်ပုံဖိုင်ပဲ ရွေးပေးပါခင်ဗျာ။");
+            event.target.value = ''; // Reset input
+            return;
+        }
+
+        // ၂။ Preview ပြခြင်း
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            preview.src = e.target.result; // ပုံအသစ်ကို Preview ပြလိုက်ပြီ
+        }
+        reader.readAsDataURL(file);
+    }
+});
+
 async function updateProfile() {
+    // ၁။ Input တွေဆီက value ယူခြင်း
+    const fullName = document.getElementById('nameInput').value;
+    const birthday = document.getElementById('dobInput').value;
+    const email = document.getElementById('emailInput').value;
     const bio = document.getElementById('bioInput').value;
-    const avatarFile = document.getElementById('avatarInput').files[0];
     const token = localStorage.getItem('token');
 
     const formData = new FormData();
+    formData.append('fullName', fullName);
+    formData.append('birthday', birthday);
+    formData.append('email', email);
     formData.append('bio', bio);
-    if (avatarFile) formData.append('avatar', avatarFile);
 
-    const res = await fetch('/api/users/profile', {
-        method: 'PUT',
-        headers: { 'Authorization': `Bearer ${token}` },
-        body: formData
-    });
+    // ၂။ Cropper ကနေ ညှိထားတဲ့ ပုံရှိမရှိ စစ်ပြီး ထည့်ခြင်း
+    // window.finalAvatar က cropAndSave() function ထဲကနေ လာတာဖြစ်ရပါမယ်
+    if (window.finalAvatar) {
+        formData.append('avatar', window.finalAvatar, 'avatar.jpg');
+    }
 
-    if (res.ok) {
-        alert("Profile updated!");
-        location.reload();
+    try {
+        const res = await fetch('/api/users/profile', {
+            method: 'PUT',
+            headers: { 'Authorization': `Bearer ${token}` },
+            body: formData 
+        });
+
+        if (res.ok) {
+            alert("Profile updated successfully! 🔥");
+            location.reload();
+        } else {
+            const error = await res.json();
+            alert("Update failed: " + error.message);
+        }
+    } catch (err) {
+        console.error("Error updating profile:", err);
+        alert("Something went wrong!");
     }
 }
 
@@ -163,6 +208,35 @@ async function saveEdit(postId) {
         body: JSON.stringify({ content: newContent })
     });
     loadMyPosts();
+}
+let cropper;
+
+// ၁။ ပုံရွေးလိုက်တာနဲ့ Pop-up ပွင့်လာအောင်လုပ်ခြင်း
+document.getElementById('avatarInput').onchange = function (e) {
+    const reader = new FileReader();
+    reader.onload = function (event) {
+        document.getElementById('cropperModal').classList.remove('hidden');
+        const image = document.getElementById('cropperImage');
+        image.src = event.target.result;
+
+        if (cropper) cropper.destroy(); // အဟောင်းရှိရင် ဖျက်မယ်
+        cropper = new Cropper(image, { aspectRatio: 1, viewMode: 1 });
+    };
+    reader.readAsDataURL(e.target.files[0]);
+};
+
+// ၂။ ပုံကို ညှိပြီး Preview ပြန်ပြခြင်း
+function cropAndSave() {
+    const canvas = cropper.getCroppedCanvas({ width: 300, height: 300 });
+    canvas.toBlob((blob) => {
+        document.getElementById('current-avatar').src = URL.createObjectURL(blob);
+        window.finalAvatar = blob; // ဒီ blob ကိုပဲ server ဆီ ပို့မှာပါ
+        closeCropper();
+    }, 'image/jpeg');
+}
+
+function closeCropper() {
+    document.getElementById('cropperModal').classList.add('hidden');
 }
 // loadProfile() ထဲမှာ loadMyPosts() ကိုပါ တွဲခေါ်ပေးပါ
 async function init() {

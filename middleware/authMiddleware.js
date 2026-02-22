@@ -1,14 +1,19 @@
-const jwt = require('jsonwebtoken'); // ဒီစာကြောင်း ပါရပါမယ်
+const jwt = require('jsonwebtoken');
 
-// Middleware function ကို ဒီထဲမှာပဲ တိုက်ရိုက်ထည့်လိုက်ပါ
 const verifyToken = (req, res, next) => {
     const token = req.headers['authorization']?.split(' ')[1];
     if (!token) return res.status(401).json({ message: "No token provided" });
 
-    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+    jwt.verify(token, process.env.JWT_SECRET || 'your_secret_key', (err, decoded) => {
         if (err) return res.status(403).json({ message: "Failed to authenticate token" });
+
+        // req.user ထဲကို decoded data တစ်ခုလုံး ထည့်ပေးလိုက်ပါ
+        req.user = decoded;
+        // အရင်က သုံးထားတဲ့ req.userId ကိုလည်း ဆက်ထားပေးနိုင်ပါတယ် (Compatibility အတွက်)
         req.userId = decoded.id;
+
         next();
     });
 };
+
 module.exports = { verifyToken };

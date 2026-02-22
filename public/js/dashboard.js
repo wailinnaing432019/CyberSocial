@@ -13,6 +13,7 @@ async function initDashboard() {
     document.getElementById('nav-avatar').src = user.avatar || '/uploads/default.png';
 
     loadPosts();
+    loadUserList();
 }
 
 // "View All / See Less" Toggle Function
@@ -247,7 +248,62 @@ async function deletePost(postId) {
     });
     location.reload();
 }
+async function loadUsers() {
+    const token = localStorage.getItem('token');
+    const res = await fetch('/api/users', {
+        headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const users = await res.json();
+    const list = document.getElementById('user-list');
 
+    users.forEach(user => {
+        // ကိုယ့်နာမည်ကိုယ် ပြန်မပြအောင် စစ်မယ် (ဥပမာ currentUserId ရှိရင်)
+        const userDiv = `
+            <div onclick="startChat(${user.id}, '${user.username}')" 
+                 class="flex items-center gap-3 p-3 hover:bg-indigo-50 rounded-xl cursor-pointer transition">
+                <img src="${user.avatar || '/uploads/default.png'}" class="w-10 h-10 rounded-full border">
+                <div>
+                    <p class="text-sm font-bold text-gray-800">${user.username}</p>
+                    <p class="text-xs text-gray-400">Online</p>
+                </div>
+            </div>
+        `;
+        list.innerHTML += userDiv;
+    });
+}
+
+async function loadUserList() {
+    const token = localStorage.getItem('token');
+    try {
+        const res = await fetch('/api/users/all', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const users = await res.json();
+        const userListContainer = document.getElementById('user-list');
+        userListContainer.innerHTML = ''; // အရင်ရှင်းမယ်
+
+        users.forEach(user => {
+            const userItem = `
+                <div onclick="openPrivateChat(${user.id}, '${user.username}')" 
+                     class="flex items-center gap-3 p-2 hover:bg-gray-100 rounded-xl cursor-pointer transition group">
+                    <div class="relative">
+                        <img src="${user.avatar || '/uploads/default.png'}" class="w-11 h-11 rounded-full object-cover border border-gray-200">
+                        <div class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-bold text-gray-800 truncate">${user.username}</p>
+                        <p class="text-xs text-gray-500 truncate">${user.bio || 'Say hi!'}</p>
+                    </div>
+                </div>
+            `;
+            userListContainer.innerHTML += userItem;
+        });
+    } catch (err) {
+        console.error("User list error:", err);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', loadUsers);
 function logout() {
     localStorage.removeItem('token');
     window.location.href = 'index.html';

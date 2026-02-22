@@ -11,23 +11,49 @@ const io = new Server(server, {
     cors: { origin: "*" }
 });
 
+const { Message, User } = require('./models');
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads'))); // ပုံတွေပေါ်ဖို့
 
-// Socket.io Logic
+
+// server.js (Socket.io code)
 io.on('connection', (socket) => {
-    console.log('User Connected:', socket.id);
-    socket.on('send_message', (data) => {
-        const messageData = {
-            ...data,
-            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        };
-        io.emit('receive_message', messageData);
+
+    // Room ထဲဝင်ခြင်း (Community သို့မဟုတ် Private Room)
+    socket.on('join_room', (roomName) => {
+        // အရင်ဝင်ထားတဲ့ Room တွေထဲက ထွက်မယ် (Optional)
+        socket.rooms.forEach(room => {
+            if (room !== socket.id) socket.leave(room);
+        });
+
+        socket.join(roomName);
+        console.log(`User joined: ${roomName}`);
     });
-    socket.on('disconnect', () => console.log('User Disconnected'));
+
+    socket.on('chat_message', async (data) => {
+        try {
+            // ၁။ Database မှာ အရင်သိမ်းမယ်
+            const savedMsg = await Message.create({
+                text: data.text,
+                room: data.room,
+                senderId: data.userId
+            });
+
+            // ၂။ ပြန်ပို့မယ့် data ထဲမှာ Database က ID နဲ့ အချိန်ကိုပါ ထည့်ပေးလိုက်မယ်
+            const responseData = {
+                ...data,
+                id: savedMsg.id,
+                createdAt: savedMsg.createdAt
+            };
+
+            io.to(data.room).emit('receive_message', responseData);
+        } catch (err) {
+            console.error("Message error:", err);
+        }
+    });
 });
 
 // Routes

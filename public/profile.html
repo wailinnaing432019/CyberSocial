@@ -6,6 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CyberSocial - Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 </head>
 
 <body class="bg-gray-100 min-h-screen" onload="init()">
@@ -16,21 +19,54 @@
         </div>
     </nav>
 
-    <div class="max-w-xl mx-auto mt-10 bg-white p-8 rounded-2xl shadow-sm">
-        <div class="flex flex-col items-center mb-6">
-            <img id="current-avatar" src="/uploads/default.png"
-                class="w-24 h-24 rounded-full object-cover border-4 border-indigo-100">
-            <input type="file" id="avatarInput" class="mt-4 text-xs">
+    <div class="max-w-xl mx-auto mt-10 bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
+        <div class="flex flex-col items-center mb-8">
+            <div class="relative group">
+                <img id="current-avatar" src="/uploads/default.png"
+                    class="w-32 h-32 rounded-full object-cover border-4 border-indigo-50 shadow-md">
+                <label for="avatarInput"
+                    class="absolute bottom-0 right-0 bg-indigo-600 p-2 rounded-full text-white cursor-pointer hover:bg-indigo-700 shadow-lg transition">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                </label>
+                <input type="file" id="avatarInput" class="hidden" accept="image/*">
+            </div>
+            <p class="text-xs text-gray-400 mt-2">Click icon to change photo</p>
         </div>
 
-        <div class="space-y-4">
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Bio</label>
-                <textarea id="bioInput"
-                    class="w-full p-3 border rounded-xl h-24 mt-1 focus:ring-2 focus:ring-indigo-400 outline-none"></textarea>
+        <div class="space-y-5">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider">Full Name</label>
+                    <input type="text" id="nameInput" placeholder="John Doe"
+                        class="w-full p-3 border rounded-xl mt-1 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-indigo-400 outline-none transition">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider">Birthday</label>
+                    <input type="date" id="dobInput"
+                        class="w-full p-3 border rounded-xl mt-1 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-indigo-400 outline-none transition">
+                </div>
             </div>
+
+            <div>
+                <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider">Email Address</label>
+                <input type="email" id="emailInput" placeholder="example@mail.com"
+                    class="w-full p-3 border rounded-xl mt-1 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-indigo-400 outline-none transition">
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider">Bio</label>
+                <textarea id="bioInput" placeholder="Tell us about yourself..."
+                    class="w-full p-3 border rounded-xl h-24 mt-1 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-indigo-400 outline-none resize-none transition"></textarea>
+            </div>
+
             <button onclick="updateProfile()"
-                class="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold hover:bg-indigo-700 transition">
+                class="w-full bg-indigo-600 text-white py-4 rounded-xl font-bold hover:bg-indigo-700 shadow-indigo-200 shadow-lg transform active:scale-[0.98] transition-all">
                 Save Changes
             </button>
         </div>
@@ -40,6 +76,19 @@
         <div id="my-posts-feed" class="space-y-4 pb-10">
         </div>
     </div>
+    <div id="cropperModal" class="hidden fixed inset-0 bg-black/80 z-[100] flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-4">
+            <div class="h-64 bg-gray-200 overflow-hidden rounded-lg">
+                <img id="cropperImage" src="" class="max-w-full block">
+            </div>
+            <div class="flex gap-2 mt-4">
+                <button onclick="closeCropper()" class="flex-1 py-2 border rounded-xl">Cancel</button>
+                <button onclick="cropAndSave()" class="flex-1 py-2 bg-indigo-600 text-white rounded-xl">Crop &
+                    Save</button>
+            </div>
+        </div>
+    </div>
+
     <script src="js/profile.js"></script>
 </body>
 
