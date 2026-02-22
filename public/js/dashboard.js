@@ -1,21 +1,58 @@
 let user = null;
+let activeUsers = []; // Online ဖြစ်နေတဲ့ User ID တွေကို သိမ်းမယ်
+
+// Socket.io ချိတ်ဆက်ခြင်း (chat.js မှာ မပါသေးရင် ဒီမှာထည့်ပါ)
+const socket = io();
+
 async function initDashboard() {
     const token = localStorage.getItem('token');
     if (!token) return window.location.href = 'index.html';
 
-    // ကိုယ့် Profile Info ကို Navbar မှာ ပြဖို့
     const res = await fetch('/api/users/me', {
         headers: { 'Authorization': `Bearer ${token}` }
     });
     user = await res.json();
-    console.log("Logged in user:", user);
-    document.getElementById('welcome-text').innerText = `${user.username}`;
-    document.getElementById('nav-avatar').src = user.avatar || '/uploads/default.png';
 
+    socket.emit('register_user', user.id);
+
+    // 🔥 Community Room ကို အစကတည်းက Join ထားမယ်
+    socket.emit('join_room', 'community');
+
+    // Socket Listener တွေကို စတင်မယ်
+    setupSocketListeners();
+
+    updateNavbar(user);
+    updateUserUI(user);
     loadPosts();
     loadUserList();
+
+    // Community Chat History ကို အစကတည်းက ဆွဲတင်ထားမယ်
+    loadChatHistory('community');
 }
 
+// Server ကနေ online ဖြစ်နေတဲ့ user list ပို့လာရင် လက်ခံမယ်
+socket.on('update_online_users', (onlineIds) => {
+    activeUsers = onlineIds;
+    loadUserList(); // Online list ပြောင်းတိုင်း UI ကို update လုပ်မယ်
+});
+
+
+// Badge UI ကို Update လုပ်တဲ့ function
+function updateUnreadBadge(userId) {
+    const badge = document.getElementById(`unread-${userId}`);
+    if (badge) {
+        if (unreadCounts[userId] > 0) {
+            badge.innerText = unreadCounts[userId];
+            badge.classList.remove('hidden');
+
+            // Animation လေးပါအောင် (Optional)
+            badge.classList.add('animate-bounce');
+            setTimeout(() => badge.classList.remove('animate-bounce'), 1000);
+        } else {
+            badge.classList.add('hidden');
+        }
+    }
+}
 // "View All / See Less" Toggle Function
 function toggleComments(postId, btn) {
     const post = window.allPosts.find(p => p.id === postId);
@@ -62,6 +99,26 @@ const formatComment = (c) => `
     </div>
 `;
 
+// load avatar
+function updateUserUI(userData) {
+    const avatarUrl = userData.avatar || '/uploads/default.png';
+
+    // Post input က ပုံကို ပြောင်းမယ်
+    const inputAvatar = document.getElementById('post-input-avatar');
+    if (inputAvatar) inputAvatar.src = avatarUrl;
+
+    // တခြားနေရာတွေမှာရှိတဲ့ (ဥပမာ Sidebar က profile ပုံ) တွေကိုလည်း ဒီမှာ တစ်ခါတည်း ပြောင်းလို့ရတယ်
+    const sidebarAvatar = document.getElementById('sidebar-avatar');
+    if (sidebarAvatar) sidebarAvatar.src = avatarUrl;
+}
+// update navbar
+function updateNavbar(userData) {
+    const avatar = document.getElementById('nav-avatar');
+    const nameText = document.getElementById('welcome-text');
+
+    if (avatar) avatar.src = userData.avatar || '/uploads/default.png';
+    if (nameText) nameText.innerText = userData.username;
+}
 async function loadPosts() {
     if (!user) {
         console.log("Waiting for user data...");
@@ -220,11 +277,36 @@ async function searchUsers() {
 //     });
 // }
 
+// preview image upload
+document.getElementById('postImage').addEventListener('change', function (e) {
+    const reader = new FileReader();
+    const preview = document.getElementById('image-preview');
+    const container = document.getElementById('image-preview-container');
+
+    reader.onload = function (e) {
+        preview.src = e.target.result;
+        container.classList.remove('hidden'); // ပုံရှိရင် ပြမယ်
+    }
+
+    if (this.files[0]) {
+        reader.readAsDataURL(this.files[0]);
+    }
+});
+
+function clearPreview() {
+    document.getElementById('postImage').value = ""; // file ကို ပြန်ဖြုတ်မယ်
+    document.getElementById('image-preview-container').classList.add('hidden'); // container ကို ပြန်ဝှက်မယ်
+}
 async function submitPost() {
     const content = document.getElementById('postContent').value;
     const imageFile = document.getElementById('postImage').files[0];
     const token = localStorage.getItem('token');
 
+    // validation: content ရော ပုံရော မရှိရင် မပို့ဘူး
+    if (!content && !imageFile) {
+        alert("Please write something or select an image!");
+        return;
+    }
     const formData = new FormData();
     formData.append('content', content);
     if (imageFile) formData.append('image', imageFile);
@@ -248,30 +330,31 @@ async function deletePost(postId) {
     });
     location.reload();
 }
-async function loadUsers() {
-    const token = localStorage.getItem('token');
-    const res = await fetch('/api/users', {
-        headers: { 'Authorization': `Bearer ${token}` }
-    });
-    const users = await res.json();
-    const list = document.getElementById('user-list');
+// async function loadUsers() {
+//     const token = localStorage.getItem('token');
+//     const res = await fetch('/api/users', {
+//         headers: { 'Authorization': `Bearer ${token}` }
+//     });
+//     const users = await res.json();
+//     const list = document.getElementById('user-list');
 
-    users.forEach(user => {
-        // ကိုယ့်နာမည်ကိုယ် ပြန်မပြအောင် စစ်မယ် (ဥပမာ currentUserId ရှိရင်)
-        const userDiv = `
-            <div onclick="startChat(${user.id}, '${user.username}')" 
-                 class="flex items-center gap-3 p-3 hover:bg-indigo-50 rounded-xl cursor-pointer transition">
-                <img src="${user.avatar || '/uploads/default.png'}" class="w-10 h-10 rounded-full border">
-                <div>
-                    <p class="text-sm font-bold text-gray-800">${user.username}</p>
-                    <p class="text-xs text-gray-400">Online</p>
-                </div>
-            </div>
-        `;
-        list.innerHTML += userDiv;
-    });
-}
+//     users.forEach(user => {
+//         // ကိုယ့်နာမည်ကိုယ် ပြန်မပြအောင် စစ်မယ် (ဥပမာ currentUserId ရှိရင်)
+//         const userDiv = `
+//             <div onclick="startChat(${user.id}, '${user.username}')" 
+//                  class="flex items-center gap-3 p-3 hover:bg-indigo-50 rounded-xl cursor-pointer transition">
+//                 <img src="${user.avatar || '/uploads/default.png'}" class="w-10 h-10 rounded-full border">
+//                 <div>
+//                     <p class="text-sm font-bold text-gray-800">${user.username}</p>
+//                     <p class="text-xs text-gray-400">Online</p>
+//                 </div>
+//             </div>
+//         `;
+//         list.innerHTML += userDiv;
+//     });
+// }
 
+// document.addEventListener('DOMContentLoaded', loadUsers);
 async function loadUserList() {
     const token = localStorage.getItem('token');
     try {
@@ -280,30 +363,46 @@ async function loadUserList() {
         });
         const users = await res.json();
         const userListContainer = document.getElementById('user-list');
-        userListContainer.innerHTML = ''; // အရင်ရှင်းမယ်
+        userListContainer.innerHTML = '';
 
-        users.forEach(user => {
+        // Online ဖြစ်နေတဲ့လူကို အပေါ်ဆုံးပို့
+        users.sort((a, b) => activeUsers.includes(b.id) - activeUsers.includes(a.id));
+
+        users.forEach(u => {
+            if (u.id === user.id) return;
+
+            const isOnline = activeUsers.includes(u.id);
+            const statusColor = isOnline ? 'bg-green-500' : 'bg-gray-300';
+
+            // လက်ရှိ သိမ်းထားတဲ့ unread count ရှိမရှိ စစ်မယ်
+            const count = unreadCounts[u.id] || 0;
+            const badgeClass = count > 0 ? '' : 'hidden';
+
             const userItem = `
-                <div onclick="openPrivateChat(${user.id}, '${user.username}')" 
-                     class="flex items-center gap-3 p-2 hover:bg-gray-100 rounded-xl cursor-pointer transition group">
+                <div onclick="openPrivateChat(${u.id}, '${u.username}')" 
+                     class="flex items-center gap-3 p-3 hover:bg-indigo-50 rounded-2xl cursor-pointer transition-all group">
+                    
                     <div class="relative">
-                        <img src="${user.avatar || '/uploads/default.png'}" class="w-11 h-11 rounded-full object-cover border border-gray-200">
-                        <div class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
+                        <img src="${u.avatar || '/uploads/default.png'}" class="w-11 h-11 rounded-full object-cover border border-gray-100 shadow-sm">
+                        <div class="absolute bottom-0 right-0 w-3 h-3 ${statusColor} border-2 border-white rounded-full"></div>
                     </div>
+
                     <div class="flex-1 min-w-0">
-                        <p class="text-sm font-bold text-gray-800 truncate">${user.username}</p>
-                        <p class="text-xs text-gray-500 truncate">${user.bio || 'Say hi!'}</p>
+                        <p class="text-sm font-bold text-gray-800 truncate group-hover:text-indigo-600">${u.username}</p>
+                        <p class="text-[11px] text-gray-500 truncate">${isOnline ? 'Active Now' : (u.bio || 'Offline')}</p>
+                    </div>
+
+                    <div id="unread-${u.id}" class="${badgeClass} bg-red-500 text-white text-[10px] font-bold min-w-[18px] h-[18px] flex items-center justify-center rounded-full px-1 shadow-sm">
+                        ${count}
                     </div>
                 </div>
             `;
-            userListContainer.innerHTML += userItem;
+            userListContainer.insertAdjacentHTML('beforeend', userItem);
         });
     } catch (err) {
         console.error("User list error:", err);
     }
 }
-
-document.addEventListener('DOMContentLoaded', loadUsers);
 function logout() {
     localStorage.removeItem('token');
     window.location.href = 'index.html';

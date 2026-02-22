@@ -114,7 +114,7 @@ router.get('/chat-history/:room', verifyToken, async (req, res) => {
         // ဒီ room ထဲက နောက်ဆုံးစာ ၅၀ ကို အရင်ကနေ နောက်ဆုံးစဉ်ပြီး ယူမယ်
         const messages = await Message.findAll({
             where: { room: room },
-            attributes: ['id', 'text', 'room', 'senderId', 'createdAt'],
+            attributes: ['id', 'text', 'room', 'senderId', 'createdAt', 'isEdited', 'image'], // လိုအပ်တဲ့ field တွေ
             include: [{
                 model: User,
                 as: 'sender', // Model ထဲမှာ associate လုပ်ထားတဲ့ နာမည်
@@ -130,4 +130,6 @@ router.get('/chat-history/:room', verifyToken, async (req, res) => {
         res.status(500).json({ message: "History ဆွဲလို့မရပါဘူး" });
     }
 });
+
+
 module.exports = router;

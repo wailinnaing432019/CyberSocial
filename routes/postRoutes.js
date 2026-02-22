@@ -37,9 +37,17 @@ router.get('/', async (req, res) => {
 // 1. CREATE Post with Image
 router.post('/', verifyToken, upload.single('image'), async (req, res) => {
     try {
-        const imagePath = req.file ? `/uploads/${req.file.filename}` : null;
+        const { content } = req.body;
+        const image = req.file;
+
+        // Content ရော Image ရော မပါလာရင် Error ပေးမယ်
+        if (!content && !image) {
+            return res.status(400).json({ message: "Post content or image is required" });
+        }
+
+        const imagePath = image ? `/uploads/${image.filename}` : null;
         const post = await Post.create({
-            content: req.body.content,
+            content: content,
             image: imagePath,
             userId: req.userId
         });

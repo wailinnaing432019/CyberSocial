@@ -245,3 +245,31 @@ textarea {
     font-weight: bold;
     margin-bottom: 5px;
 }
+
+/* Sidebar user-list အတွက် သီးသန့် Scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 5px;
+    /* Scrollbar အကျယ်ကို သေးသေးလေးပဲထားမယ် */
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+    /* လမ်းကြောင်းကို အကြည်ရောင်ထားမယ် */
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #e2e8f0;
+    /* အရောင်ဖျော့ဖျော့လေး */
+    border-radius: 20px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #cbd5e1;
+    /* Hover လုပ်ရင် နည်းနည်း ပိုရင့်သွားမယ် */
+}
+
+/* Firefox အတွက် */
+.custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: #e2e8f0 transparent;
+}

@@ -5,67 +5,154 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CyberSocial - Dashboard</title>
+    <link rel="stylesheet" href="./css/customScroll.css">
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
 <body class="bg-gray-100 min-h-screen" onload="initDashboard()">
-    <nav class="bg-white shadow-sm sticky top-0 z-50 py-3 px-6 border-b">
+    <nav class="bg-white/80 backdrop-blur-md sticky top-0 z-50 py-2 px-4 md:px-8 border-b border-gray-100">
         <div class="max-w-7xl mx-auto flex justify-between items-center">
-            <h1 class="text-2xl font-black text-indigo-600 tracking-tighter">CyberSocial</h1>
-            <div class="flex items-center gap-4">
-                <a href="profile.html"
-                    class="flex items-center gap-2 bg-gray-100 p-1 pr-4 rounded-full hover:bg-gray-200 transition">
-                    <img id="nav-avatar" src="/uploads/default.png" class="w-8 h-8 rounded-full object-cover">
-                    <span id="welcome-text" class="text-sm font-bold text-gray-700">Loading...</span>
-                </a>
-                <button onclick="logout()" class="text-red-500 text-sm font-bold hover:underline">Logout</button>
+            <div class="flex items-center gap-8">
+                <h1
+                    class="text-2xl font-black bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent tracking-tighter cursor-pointer">
+                    CyberSocial
+                </h1>
+                <div
+                    class="hidden md:flex items-center bg-gray-100 px-3 py-1.5 rounded-full border border-transparent focus-within:border-indigo-300 focus-within:bg-white transition-all w-64">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-400" fill="none"
+                        viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                    <input type="text" placeholder="Search CyberSocial..."
+                        class="bg-transparent border-none focus:ring-0 text-sm w-full ml-2">
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2 md:gap-5">
+                <button class="p-2 text-indigo-600 bg-indigo-50 rounded-xl transition-all">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
+                        <path
+                            d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
+                    </svg>
+                </button>
+
+                <button class="p-2 text-gray-500 hover:bg-gray-100 rounded-xl relative group transition-all">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                    </svg>
+                    <span class="absolute top-2 right-2.5 w-2 h-2 bg-red-500 border-2 border-white rounded-full"></span>
+                </button>
+
+                <div class="flex items-center gap-3 pl-2 border-l border-gray-100 ml-2">
+                    <a href="profile.html" class="flex items-center gap-2 group">
+                        <img id="nav-avatar" src="/uploads/default.png"
+                            class="w-9 h-9 rounded-full object-cover ring-2 ring-transparent group-hover:ring-indigo-500 transition-all shadow-sm">
+                        <div class="hidden md:block overflow-hidden">
+                            <p id="welcome-text"
+                                class="text-[13px] font-bold text-gray-800 leading-tight truncate w-24">Loading...</p>
+                            <p class="text-[10px] text-gray-500 font-medium">View Profile</p>
+                        </div>
+                    </a>
+                    <button onclick="logout()" class="ml-2 p-2 text-gray-400 hover:text-red-500 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                        </svg>
+                    </button>
+                </div>
             </div>
         </div>
     </nav>
 
-    <div class="max-w-7xl mx-auto flex gap-6 p-6">
+    <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-6 p-4 md:p-6">
 
-        <aside class="hidden md:block w-80 sticky top-24 h-[calc(100vh-120px)]">
-            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 h-full flex flex-col">
-                <div class="p-4 border-b">
-                    <h2 class="font-black text-lg text-gray-800">Direct Messages</h2>
+        <aside class="hidden md:block md:col-span-3 sticky top-24 h-[calc(100vh-120px)] overflow-hidden">
+            <div
+                class="bg-white rounded-3xl shadow-sm border border-gray-100 h-full flex flex-col transition-all hover:shadow-md">
+                <div class="p-5 flex justify-between items-center border-b border-gray-50">
+                    <h2 class="font-black text-xl text-gray-800 tracking-tight">Messages</h2>
+                    <span
+                        class="bg-indigo-100 text-indigo-600 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">Online</span>
                 </div>
-                <div id="user-list" class="flex-1 overflow-y-auto p-2 space-y-1">
+                <div id="user-list" class="flex-1 overflow-y-auto p-3 space-y-2 custom-scrollbar">
+                    <div
+                        class="flex items-center gap-3 p-3 rounded-2xl hover:bg-indigo-50 cursor-pointer transition-all group">
+                        <div class="relative">
+                            <img src="/uploads/default.png"
+                                class="w-11 h-11 rounded-full object-cover ring-2 ring-white shadow-sm">
+                            <div
+                                class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full">
+                            </div>
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-sm font-bold text-gray-800 group-hover:text-indigo-600 transition-colors">
+                                Username</p>
+                            <p class="text-[11px] text-gray-500 truncate">Tap to chat...</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </aside>
 
-        <main class="flex-1 max-w-2xl space-y-6">
-            <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200">
+        <main class="md:col-span-6 space-y-6">
+            <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-gray-100 transition-all hover:shadow-md">
                 <div class="flex gap-4">
-                    <img id="post-input-avatar" src="/uploads/default.png" class="w-10 h-10 rounded-full object-cover">
+                    <img id="post-input-avatar" src="/uploads/default.png"
+                        class="w-12 h-12 rounded-full object-cover shadow-sm ring-2 ring-indigo-50">
                     <textarea id="postContent"
-                        class="w-full h-20 p-2 border-none focus:ring-0 outline-none resize-none text-lg"
-                        placeholder="What's on your mind?"></textarea>
+                        class="w-full h-14 p-2 border-none focus:ring-0 outline-none resize-none text-gray-700 placeholder:text-gray-400 font-medium text-lg"
+                        placeholder="What's happening?"></textarea>
                 </div>
-                <div class="flex justify-between items-center pt-3 border-t mt-3">
+
+                <div id="image-preview-container"
+                    class="hidden mt-4 relative rounded-2xl overflow-hidden border border-gray-100 shadow-inner group">
+                    <img id="image-preview" src="#"
+                        class="w-full max-h-80 object-cover transition-transform duration-500 group-hover:scale-105">
+                    <button onclick="clearPreview()"
+                        class="absolute top-3 right-3 bg-black/40 backdrop-blur-md text-white rounded-full p-2 hover:bg-red-500 transition-all shadow-lg">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="flex justify-between items-center pt-4 border-t border-gray-50 mt-4">
                     <label
-                        class="flex items-center gap-2 cursor-pointer text-gray-500 hover:text-indigo-600 transition">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                        class="flex items-center gap-2 cursor-pointer bg-gray-50 px-4 py-2 rounded-full text-gray-600 hover:bg-indigo-50 hover:text-indigo-600 transition-all group">
+                        <svg xmlns="http://www.w3.org/2000/svg"
+                            class="h-5 w-5 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24"
                             stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
-                        <span class="text-sm font-medium">Photo</span>
+                        <span class="text-xs font-bold uppercase tracking-wider">Photo</span>
                         <input type="file" id="postImage" class="hidden" accept="image/*">
                     </label>
                     <button onclick="submitPost()"
-                        class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-full font-bold transition shadow-md shadow-indigo-100">Post</button>
+                        class="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-2.5 rounded-full font-black text-sm transition-all shadow-lg shadow-indigo-100 hover:shadow-indigo-200 transform active:scale-95">
+                        POST
+                    </button>
                 </div>
             </div>
 
-            <div id="feed" class="space-y-4 pb-10"></div>
+            <div id="feed" class="space-y-6 pb-20"></div>
         </main>
 
-        <aside class="hidden lg:block w-72 sticky top-24 h-fit">
-            <div class="bg-white rounded-2xl shadow-sm border p-4">
-                <h3 class="font-bold text-gray-800 mb-3">Suggested for you</h3>
-                <p class="text-sm text-gray-500">Coming soon: Connect with more friends!</p>
+        <aside class="hidden lg:block lg:col-span-3 sticky top-24 h-fit">
+            <div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 space-y-4">
+                <h3 class="font-black text-lg text-gray-800 tracking-tight">Who to follow</h3>
+                <div class="space-y-4">
+                    <p class="text-xs text-gray-400 italic">Finding people for you...</p>
+                </div>
+                <div class="pt-4 border-t border-gray-50">
+                    <p class="text-[10px] text-gray-400 font-medium">© 2026 CyberSocial UI Kit</p>
+                </div>
             </div>
         </aside>
     </div>
@@ -116,13 +203,54 @@
             <div id="chat-box" class="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50"></div>
 
             <div class="p-3 border-t bg-white">
-                <div class="flex gap-2">
-                    <input type="text" id="chat-input"
-                        class="flex-1 bg-gray-100 border-none rounded-full px-4 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
-                        placeholder="Aa">
-                    <button onclick="sendMessage()"
-                        class="bg-indigo-600 text-white p-2 rounded-full hover:bg-indigo-700">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
+                <input type="file" id="chat-image-input" class="hidden" accept="image/*"
+                    onchange="uploadChatImage(this)">
+                <div id="chat-image-preview-container"
+                    class="hidden px-3 py-2 bg-gray-50 border-x border-t rounded-t-xl relative">
+                    <img id="chat-preview-img" src="" class="h-20 w-20 object-cover rounded-lg border shadow-sm">
+                    <button onclick="clearChatPreview()"
+                        class="absolute top-1 left-20 bg-red-500 text-white rounded-full p-0.5">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                <div id="edit-mode-indicator"
+                    class="hidden bg-indigo-50 px-3 py-1 flex justify-between items-center rounded-t-lg border-x border-t border-indigo-100">
+                    <span class="text-[10px] text-indigo-600 font-bold uppercase tracking-wider">Editing Message</span>
+                    <button onclick="cancelEdit()" class="text-gray-400 hover:text-red-500 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+
+                <div
+                    class="flex items-end gap-2 bg-gray-100 p-2 rounded-2xl transition-all focus-within:bg-white focus-within:ring-2 focus-within:ring-indigo-100">
+                    <button onclick="document.getElementById('chat-image-input').click()"
+                        class="p-1 text-gray-400 hover:text-indigo-600 mb-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                    </button>
+                    <div id="typing-indicator" class="hidden px-4 py-1 text-[10px] text-gray-400 italic">
+                        <span id="typing-text">Someone is typing...</span>
+                    </div>
+                    <textarea id="chat-input"
+                        class="flex-1 bg-transparent border-none px-2 py-1 text-sm focus:ring-0 outline-none resize-none max-h-32 min-h-[36px] custom-scrollbar"
+                        placeholder="Aa" rows="1" oninput="autoResize(this)"
+                        onkeydown="handleChatKeydown(event)"></textarea>
+                    <input type="hidden" id="pending-image-url" value="">
+                    <input type="hidden" id="edit-message-id" value="">
+
+                    <button id="send-btn" onclick="sendMessage()"
+                        class="bg-indigo-600 text-white p-2 rounded-xl hover:bg-indigo-700 transition-all shadow-sm active:scale-90 mb-0.5">
+                        <svg id="send-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
+                            class="w-5 h-5">
                             <path
                                 d="M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.405z" />
                         </svg>

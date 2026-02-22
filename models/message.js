@@ -16,7 +16,15 @@ module.exports = (sequelize, DataTypes) => {
   Message.init({
     text: DataTypes.TEXT,
     room: DataTypes.STRING,
-    senderId: DataTypes.INTEGER
+    senderId: DataTypes.INTEGER,
+    isEdited: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false
+    },
+    image: {
+      type: DataTypes.STRING,
+      allowNull: true
+    }
   }, {
     sequelize,
     modelName: 'Message',
