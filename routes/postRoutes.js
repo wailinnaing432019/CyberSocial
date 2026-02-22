@@ -93,6 +93,21 @@ router.delete('/:id', verifyToken, async (req, res) => {
     res.json({ message: "Post deleted" });
 });
 
+router.get('/search', async (req, res) => {
+    try {
+        const { q } = req.query;
+        const posts = await Post.findAll({
+            where: {
+                content: { [Op.like]: `%${q}%` }
+            },
+            include: [{ model: User, attributes: ['username', 'avatar'] }, { model: Like }, { model: Comment }],
+            order: [['createdAt', 'DESC']]
+        });
+        res.json(posts);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
 // 3. UPDATE Post
 router.put('/:id', verifyToken, async (req, res) => {
     const post = await Post.findOne({ where: { id: req.params.id, userId: req.userId } });

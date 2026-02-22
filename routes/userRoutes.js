@@ -26,6 +26,9 @@ const { verifyToken } = require('../middleware/authMiddleware');
 const multer = require('multer');
 const path = require('path');
 
+
+const { isProfileOwner } = require('../middleware/checkOwnership');
+
 // Profile Picture သိမ်းရန် Multer Setup
 const storage = multer.diskStorage({
     destination: './public/uploads/avatars/',
@@ -58,6 +61,8 @@ router.get('/me', verifyToken, async (req, res) => {
     res.json(user);
 });
 
+
+
 const { Op } = require('sequelize');
 router.get('/all', verifyToken, async (req, res) => {
 
@@ -88,6 +93,31 @@ router.get('/', verifyToken, async (req, res) => {
     }
 });
 
+router.get('/:id', verifyToken, async (req, res) => {
+    try {
+        const { Post, User, Like, Comment } = require('../models'); // Model 
+        const user = await User.findByPk(req.params.id, {
+            attributes: ['id', 'username', 'fullName', 'birthday', 'bio', 'avatar'],
+            include: [{
+                model: Post,
+                include: [
+                    { model: User, attributes: ['username', 'avatar'] },
+                    { model: Like },
+                    { model: Comment }
+                ],
+                separate: true, // Post တွေကို သီးသန့် query ထုတ်ဖို့
+                order: [['createdAt', 'DESC']] // အသစ်ဆုံးကို အပေါ်ကထားမယ်
+            }]
+        });
+
+        if (!user) return res.status(404).send("User not found");
+        const isMe = (Number(req.userId) === Number(req.params.id));
+
+        res.json({ user, isMe });
+    } catch (err) {
+        res.status(500).send(err.message);
+    }
+});
 // chatting
 // routes/chat.js
 router.get('/history/:room', verifyToken, async (req, res) => {
@@ -110,11 +140,24 @@ router.get('/history/:room', verifyToken, async (req, res) => {
 router.get('/chat-history/:room', verifyToken, async (req, res) => {
     try {
         const { room } = req.params;
+        const myId = req.userId;
+        const { Op } = require('sequelize');
 
+        // ၁။ History မပြခင် ဒီ Room ထဲက ကိုယ်မဖတ်ရသေးတဲ့ စာတွေကို 'seen' အဖြစ် အရင် Update လုပ်မယ်
+        await Message.update(
+            { status: 'seen' },
+            {
+                where: {
+                    room: room,
+                    senderId: { [Op.ne]: myId }, // သူများပို့တဲ့စာ
+                    status: 'sent'
+                }
+            }
+        );
         // ဒီ room ထဲက နောက်ဆုံးစာ ၅၀ ကို အရင်ကနေ နောက်ဆုံးစဉ်ပြီး ယူမယ်
         const messages = await Message.findAll({
             where: { room: room },
-            attributes: ['id', 'text', 'room', 'senderId', 'createdAt', 'isEdited', 'image'], // လိုအပ်တဲ့ field တွေ
+            attributes: ['id', 'text', 'room', 'senderId', 'createdAt', 'isEdited', 'image', 'status', 'seenBy'], // လိုအပ်တဲ့ field တွေ
             include: [{
                 model: User,
                 as: 'sender', // Model ထဲမှာ associate လုပ်ထားတဲ့ နာမည်
@@ -127,9 +170,33 @@ router.get('/chat-history/:room', verifyToken, async (req, res) => {
         res.json(messages);
     } catch (err) {
         console.error(err);
-        res.status(500).json({ message: "History ဆွဲလို့မရပါဘူး" });
+        res.status(500).json({ message: "History ဆွဲလို့မရပါဘူး", error: err.message });
     }
 });
 
+// Search Users Route
+router.get('/search', async (req, res) => {
+    try {
+        const { username } = req.query;
+        if (!username) {
+            return res.json([]);
+        }
+
+        const users = await User.findAll({
+            where: {
+                username: {
+                    [Op.like]: `%${username}%` // စာလုံးပါတာနဲ့ ရှာမယ်
+                }
+            },
+            attributes: ['id', 'username', 'avatar', 'bio'], // လိုအပ်တဲ့ field တွေပဲ ယူမယ်
+            limit: 10 // ၁၀ ယောက်ပဲ ပြမယ်
+        });
+
+        res.json(users);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Search error" });
+    }
+});
 
 module.exports = router;

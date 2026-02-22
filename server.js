@@ -12,6 +12,7 @@ const io = new Server(server, {
 });
 
 const { Message, User } = require('./models');
+const { verifyToken } = require('./middleware/authMiddleware.js');
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -35,24 +36,37 @@ io.on('connection', (socket) => {
 
     socket.on('chat_message', async (data) => {
         try {
-            // ၁။ Database မှာ သိမ်းတဲ့အခါ image field ပါ ထည့်မယ်
             const savedMsg = await Message.create({
                 text: data.text,
                 room: data.room,
                 senderId: data.userId,
-                image: data.image || null // ပုံ URL ပါရင် သိမ်းမယ်၊ မပါရင် null
+                status: 'sent',
+                image: data.image || null
             });
 
-            // ၂။ Client ဆီ ပြန်ပို့မယ့် data
             const responseData = {
                 ...data,
                 id: savedMsg.id,
-                image: savedMsg.image, // DB ကနေ ပြန်လာတဲ့ ပုံ URL
-                isEdited: savedMsg.isEdited,
                 createdAt: savedMsg.createdAt
             };
 
+            // ၁။ လက်ရှိ Room ထဲမှာ ရှိနေတဲ့သူတွေကို စာပို့မယ် (Chat Box ထဲ စာပေါ်ဖို့)
             io.to(data.room).emit('receive_message', responseData);
+
+            // ၂။ 🔥 Badge အတွက်: တစ်ဖက်လူကို Socket ID နဲ့ တိုက်ရိုက် လှမ်းအော်မယ်
+            // data.room က "1_2" ပုံစံမို့လို့ လက်ခံမယ့်သူ ID ကို ခွဲထုတ်မယ်
+            const roomIds = data.room.split('_');
+            const receiverId = roomIds.find(id => Number(id) !== Number(data.userId));
+
+            // တစ်ဖက်လူ Online ရှိနေရင် သူ့ဆီ Badge တိုးဖို့ Event လွှတ်မယ်
+            const receiverSocketId = onlineUsers.get(Number(receiverId));
+            if (receiverSocketId) {
+                io.to(receiverSocketId).emit('unread_update', {
+                    senderId: data.userId,
+                    room: data.room
+                });
+            }
+
         } catch (err) {
             console.error("Message error:", err);
         }
@@ -79,7 +93,6 @@ io.on('connection', (socket) => {
         io.emit('update_online_users', Array.from(onlineUsers.keys()));
     });
 
-    // server.js (io.on('connection') ထဲမှာ ထည့်ရန်)
     socket.on('delete_message', async (data) => {
         try {
             // ၁။ Database ကနေ တကယ်ဖျက်မယ်
@@ -107,6 +120,16 @@ io.on('connection', (socket) => {
 
     socket.on('stop_typing', (data) => {
         socket.to(data.room).emit('hide_typing');
+    });
+
+    // Message ဖတ်ပြီးကြောင်း Room ထဲက လူတွေကို အကြောင်းကြားမယ်
+    socket.on('message_read', ({ room, readerId }) => {
+        // စာပို့တဲ့သူဆီကို UI update လုပ်ဖို့ လှမ်းပြောမယ်
+        socket.to(room).emit('update_seen_ui', { room, readerId });
+    });
+
+    socket.on('message_delivered', ({ messageId, senderId }) => {
+        io.to(senderId).emit('update_status', { messageId, status: 'delivered' });
     });
     socket.on('disconnect', () => {
         for (let [userId, socketId] of onlineUsers.entries()) {

@@ -24,6 +24,14 @@ module.exports = (sequelize, DataTypes) => {
     image: {
       type: DataTypes.STRING,
       allowNull: true
+    },
+    status: {
+      type: DataTypes.ENUM('sent', 'delivered', 'seen'),
+      defaultValue: 'sent'
+    },
+    seenBy: {
+      type: DataTypes.JSON,
+      defaultValue: [] // ဖတ်ပြီးသား User ID တွေကို array နဲ့ သိမ်းမယ် [1, 2, 5]
     }
   }, {
     sequelize,
